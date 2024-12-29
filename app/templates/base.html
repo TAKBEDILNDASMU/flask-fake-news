@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <title>{{ title if title else 'My Website' }}</title>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header Section -->
+  <header class="bg-blue-600 text-white py-4 shadow-md">
+    <div class="container w-11/12 mx-auto flex justify-between items-center">
+      <h1 class="text-3xl font-bold">Fake News Detection</h1>
+      <nav>
+        <ul class="flex space-x-4">
+          <li><a href="/" class="hover:underline">Home</a></li>
+          <li><a href="/history" class="hover:underline">History</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Jinja directives: page contents will go between them -->
+  {% block content %}
+  {% endblock %}
+
+
+  <!-- Footer Section -->
+  <footer class="bg-gray-800 text-white text-center py-4 mt-10">
+    <p>&copy; 2024 Fake News Detection. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById('analyze-btn').addEventListener('click', () => {
+      const newsContent = document.getElementById('news-input').value;
+      const resultSection = document.getElementById('result');
+      const resultText = document.getElementById('result-text');
+
+      if (newsContent.trim() === '') {
+        alert('Please paste a news article!');
+        return;
+      }
+
+      // Fake analysis logic
+      const isFake = Math.random() > 0.5;
+      resultText.textContent = isFake ? '🛑 This news is likely FAKE!' : '✅ This news seems REAL.';
+      resultText.className = isFake ? 'text-red-600 font-bold' : 'text-green-600 font-bold';
+
+      resultSection.classList.remove('hidden');
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,27 @@
+<!-- history.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-white shadow-lg rounded-lg p-6 md:p-10 flex-grow">
+  <h2 class="text-2xl font-bold mb-4 text-center">Analysis History</h2>
+  <p class="text-center text-gray-600">Here are your previously analyzed news articles with detailed content.</p>
+
+  <div class="mt-6 space-y-4">
+    <!-- Article Item -->
+    {% for history in histories %}
+    <div class="p-4 bg-gray-50 rounded-md shadow-md border">
+      <h3 class="text-lg font-semibold">📰 Article {{history.id}}</h3>
+      <p><strong>Result:</strong> 
+          {% if history.is_false == 1 %}
+            <span class="text-red-600">FAKE</span>
+          {% else %}
+            <span class="text-blue-600">REAL</span>
+          {% endif %}
+      </p>
+      <p class="mt-2 text-gray-700 ">{{history.content}}</p>
+    </div>
+
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

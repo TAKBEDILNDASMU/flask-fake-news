@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Main Section -->
+<main class="container w-11/12 mx-auto mt-10 px-4 flex-grow">
+  <form action="/predict" method="POST" class="bg-white shadow-lg rounded-lg p-6 md:p-10">
+    <h2 class="text-2xl font-bold mb-4 text-center">Enter Your News Article</h2>
+
+    <textarea name="user_input" id="news-input" placeholder="Paste your news article here..."
+      class="w-full h-40 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+{{ user_input | default('') }}
+</textarea>
+
+    <div class="text-center mt-6">
+      <button id="analyze-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none">
+        Analyze News
+      </button>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+{% if prediction is not none %}
+      <div class="mt-6 p-4 border rounded-md">
+        <h3 class="text-lg font-semibold">Prediction Result:</h3>
+        <p class="text-gray-700">
+          {% if prediction == 1 %}
+            🛑 This news is likely <span class="text-red-600 font-bold">FAKE</span>.
+          {% else %}
+            ✅ This news seems <span class="text-green-600 font-bold">REAL</span>.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+</main>
+
+{% endblock %}
