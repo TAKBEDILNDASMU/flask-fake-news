@@ -10,7 +10,7 @@
     <!-- Article Item -->
     {% for history in histories %}
     <div class="p-4 bg-gray-50 rounded-md shadow-md border">
-      <h3 class="text-lg font-semibold">📰 Article {{history.id}}</h3>
+      <h3 class="text-lg font-semibold">📰 Article {{loop.index}}</h3>
       <p><strong>Result:</strong> 
           {% if history.is_false == 1 %}
             <span class="text-red-600">FAKE</span>
