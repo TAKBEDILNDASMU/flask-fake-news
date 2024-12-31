@@ -34,23 +34,156 @@
   </footer>
 
   <script>
-    document.getElementById('analyze-btn').addEventListener('click', () => {
-      const newsContent = document.getElementById('news-input').value;
-      const resultSection = document.getElementById('result');
-      const resultText = document.getElementById('result-text');
+    document.addEventListener("DOMContentLoaded", () => {
+      const analyzeBtn = document.getElementById("analyze-btn");
+      const newsInput = document.getElementById("news-input");
+      const mainSection = document.querySelector("main");
 
-      if (newsContent.trim() === '') {
-        alert('Please paste a news article!');
-        return;
-      }
+      analyzeBtn.addEventListener("click", async (event) => {
+        event.preventDefault(); // Prevent default form submission
 
-      // Fake analysis logic
-      const isFake = Math.random() > 0.5;
-      resultText.textContent = isFake ? '🛑 This news is likely FAKE!' : '✅ This news seems REAL.';
-      resultText.className = isFake ? 'text-red-600 font-bold' : 'text-green-600 font-bold';
+        const userInput = newsInput.value.trim();
+        if (!userInput) {
+          alert("Please enter or paste a news article!");
+          return;
+        }
 
-      resultSection.classList.remove('hidden');
+        // Display loading state
+        let resultSection = document.getElementById("result-section");
+        if (!resultSection) {
+          resultSection = document.createElement("div");
+          resultSection.id = "result-section";
+          resultSection.className = "mt-6 p-4 border rounded-md";
+          mainSection.appendChild(resultSection);
+        }
+        resultSection.innerHTML = `
+      <h3 class="text-lg font-semibold">Prediction Result:</h3>
+      <p class="text-gray-700">⏳ Analyzing... Please wait.</p>
+    `;
+
+        try {
+          // Step 1: Send the user's input to the API
+          const initialResponse = await fetch(
+            "https://titanicc73-fake-news-model.hf.space/gradio_api/call/predict",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                data: [userInput],
+              }),
+            }
+          );
+
+          if (!initialResponse.ok) {
+            throw new Error("Failed to initiate prediction");
+          }
+
+          const initialData = await initialResponse.json();
+          const eventId = initialData?.event_id;
+
+          if (!eventId) {
+            throw new Error("Failed to retrieve Event ID");
+          }
+
+          // Step 2: Poll for prediction results
+          let predictionComplete = false;
+          let retries = 10; // Max retries for polling
+          let trueProbability = 0;
+          let fakeProbability = 0;
+
+          while (!predictionComplete && retries > 0) {
+            const predictionResponse = await fetch(
+              `https://titanicc73-fake-news-model.hf.space/gradio_api/call/predict/${eventId}`
+            );
+
+            if (!predictionResponse.ok) {
+              throw new Error("Failed to fetch prediction result");
+            }
+
+            const rawText = await predictionResponse.text();
+            console.log("Raw Response:", rawText);
+
+            const eventMatch = rawText.match(/event:\s+complete/);
+            const dataMatch = rawText.match(/data:\s+(.+)/);
+
+            if (eventMatch && dataMatch) {
+              const rawData = dataMatch[1].trim();
+
+              try {
+                const parsedData = JSON.parse(rawData);
+                console.log("Parsed Data:", parsedData);
+
+                // Extract true and fake probabilities
+                trueProbability = parsedData?.[0]?.[0]?.[0] || 0;
+                fakeProbability = parsedData?.[0]?.[0]?.[1] || 0;
+
+                predictionComplete = true;
+              } catch (jsonError) {
+                throw new Error("Failed to parse prediction data");
+              }
+            } else {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              retries--;
+            }
+          }
+
+          // Step 3: Update the UI with the result
+          if (predictionComplete) {
+            let resultMessage = "";
+            if (trueProbability > fakeProbability) {
+              resultMessage = `✅ This news seems <span class="text-green-600 font-bold">REAL</span> (${(trueProbability * 100).toFixed(2)}%)`;
+              resultSection.className = "mt-6 p-4 border rounded-md bg-green-100";
+            } else {
+              resultMessage = `🛑 This news is likely <span class="text-red-600 font-bold">FAKE</span> (${(fakeProbability * 100).toFixed(2)}%)`;
+              resultSection.className = "mt-6 p-4 border rounded-md bg-red-100";
+            }
+
+            resultSection.innerHTML = `
+          <h3 class="text-lg font-semibold">Prediction Result:</h3>
+          <p class="text-gray-700">${resultMessage}</p>
+        `;
+          } else {
+            resultSection.innerHTML = `
+          <h3 class="text-lg font-semibold">Prediction Result:</h3>
+          <p class="text-gray-500">⚠️ Prediction timed out. Please try again.</p>
+        `;
+            resultSection.className = "mt-6 p-4 border rounded-md bg-yellow-100";
+          }
+
+
+          // Step 4: Send prediction data to Flask API
+          const flaskResponse = await fetch("/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              news_text: userInput,
+              predicted_class: trueProbability > fakeProbability ? 'REAL' : 'FAKE',
+              true_probability: trueProbability,
+              fake_probability: fakeProbability,
+            }),
+          });
+
+          if (!flaskResponse.ok) {
+            throw new Error("Failed to save prediction in database");
+          }
+
+          const flaskData = await flaskResponse.json();
+          console.log("Data saved:", flaskData);
+        } catch (error) {
+          console.error("Error:", error.message);
+          resultSection.innerHTML = `
+        <h3 class="text-lg font-semibold">Prediction Result:</h3>
+        <p class="text-red-600 font-bold">❌ Error: ${error.message}</p>
+      `;
+          resultSection.className = "mt-6 p-4 border rounded-md bg-red-100";
+        }
+      });
     });
+
   </script>
 </body>
 

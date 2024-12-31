@@ -4,28 +4,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User</title>
+  <title>Fake News Detector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
-  <table border="1">
-    <tr>
-      <th>ID</th>
-      <th>Username</th>
-    </tr>
-    {% for user in users %}
-    <tr>
-      <td>{{ user.id }}</td>
-      <td>{{ user.username }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-
-  <form action="/users" method="post">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username"><br><br>
-    <input type="submit" value="Submit">
-  </form>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-4 text-center text-gray-800">Fake News Detector</h1>
+    <textarea id="inputText" placeholder="Enter your text here..."
+      class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+    <button id="predictBtn"
+      class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md mt-4">
+      Predict
+    </button>
+    <div id="result" class="mt-4 p-3 text-gray-700 bg-gray-50 border rounded-md hidden"></div>
+    <div id="loading" class="text-center mt-4 hidden">
+      <svg class="animate-spin h-5 w-5 mr-3 inline-block text-blue-500" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      Processing...
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js')}}"></script>
 </body>
 
 </html>
